@@ -52,7 +52,8 @@ import {
         uri: configService.getOrThrow<string>(
           'MONGODB_URI',
         ),
-        serverSelectionTimeoutMS: 10000,
+        serverSelectionTimeoutMS: 5000,
+        retryAttempts: 0,
       }),
     }),
 
