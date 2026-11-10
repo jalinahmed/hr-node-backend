@@ -18,7 +18,9 @@ type HelmetMiddleware = (
 type HelmetFactory = () => HelmetMiddleware;
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, {
+    abortOnError: false,
+  });
 
   const config = app.get(ConfigService);
   const port = Number(config.get('PORT') ?? 4000);
@@ -33,10 +35,17 @@ async function bootstrap() {
     }),
   );
 
-  // Load Helmet through Node.js CommonJS compatibility.
   const helmet = require('helmet') as HelmetFactory;
-
   app.use(helmet());
+
+  // Root URL response without /api prefix.
+  app.getHttpAdapter().get('/', (_req: unknown, res: any) => {
+    res.status(200).json({
+      status: 'ok',
+      message: 'Web Crest HR Backend API',
+      documentation: '/api/docs',
+    });
+  });
 
   const swaggerConfig = new DocumentBuilder()
     .setTitle('HR Backend API')
@@ -65,4 +74,7 @@ async function bootstrap() {
   );
 }
 
-await bootstrap();
+await bootstrap().catch((error: unknown) => {
+  console.error('HR_BACKEND_STARTUP_FAILED:', error);
+  process.exitCode = 1;
+});
